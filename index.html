@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>BoraAli - Login do Motorista</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background-color: #f0f2f5; margin: 0; }
+        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+        button { background-color: #4285F4; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>BoraAli 🚗</h1>
+        <p>Olá, **Mosart Soares**! Clique abaixo para entrar:</p>
+        <button id="btn-login">Entrar com Google</button>
+        <div id="status" style="margin-top: 20px; color: green; font-weight: bold;"></div>
+    </div>
+
+    <script>
+        // --- CONFIGURAÇÃO ---
+        const SUPABASE_URL = 'https://ehemdcucqzfwevbomynr.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'http://sb_publishable_SPaOEF1M52fkopPupYjk8A_hiAywEX2'; 
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- FUNÇÃO DE LOGIN ---
+        document.getElementById('btn-login').onclick = async () => {
+            await supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: window.location.href }
+            });
+        };
+
+        // --- VERIFICAÇÃO ---
+        async function check() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (user) {
+                document.getElementById('status').innerText = "Logado como: " + user.email;
+                document.getElementById('btn-login').style.display = 'none';
+            }
+        }
+        check();
+    </script>
+</body>
+</html>
