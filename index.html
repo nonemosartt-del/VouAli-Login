@@ -6,11 +6,10 @@
     <title>BoraAli - Motorista</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f1f5f9; }
-        .container { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f1f5f9; }
+        .card { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         h2 { color: #1e293b; margin-bottom: 20px; }
-        button { width: 100%; padding: 14px; background: #2563eb; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 16px; transition: 0.2s; }
-        button:hover { background: #1d4ed8; }
+        button { width: 100%; padding: 14px; background: #2563eb; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; }
         input { width: 100%; padding: 12px; margin: 15px 0; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; }
         #form-section, #login-section { display: none; }
         #status { font-size: 14px; color: #64748b; margin-bottom: 10px; }
@@ -19,9 +18,9 @@
 </head>
 <body>
 
-<div class="container">
+<div class="card">
     <h2>BoraAli 🚗</h2>
-    <div id="status">Verificando conexão...</div>
+    <div id="status">Verificando sessão...</div>
 
     <div id="login-section">
         <p>Acesse com sua conta Google:</p>
@@ -39,16 +38,18 @@
 <script>
     const SB_URL = 'https://ehemdcucqzfwvbomynr.supabase.co';
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoZW1kY3VjcXpmd2V2Ym9teW5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjkxNzksImV4cCI6MjA5MDg0NTE3OX0.TCp09qdrquyCNfdbgpLpMNJWA0wSMTJZcJu5CAcZ5ro';
-    const supabase = window.supabase.createClient(SB_URL, SB_KEY);
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
     async function login() {
-        await supabase.auth.signInWithOAuth({
+        // Redirecionamento automático configurado para a URL atual do projeto
+        await supabaseClient.auth.signInWithOAuth({
             provider: 'google',
             options: { redirectTo: window.location.origin + window.location.pathname }
         });
     }
 
-    supabase.auth.onAuthStateChange((event, session) => {
+    // Monitor de estado: decide qual tela mostrar assim que a página carrega
+    supabaseClient.auth.onAuthStateChange((event, session) => {
         document.getElementById('status').style.display = 'none';
         if (session) {
             document.getElementById('login-section').style.display = 'none';
@@ -61,19 +62,19 @@
     });
 
     async function salvarCadastro() {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await supabaseClient.auth.getSession();
         const tel = document.getElementById('phone').value;
 
-        if(!tel) return alert("WhatsApp obrigatório!");
+        if(!tel) return alert("Por favor, digite seu WhatsApp!");
 
-        const { error } = await supabase.from('profiles').upsert({
+        const { error } = await supabaseClient.from('profiles').upsert({
             id: session.user.id,
             full_name: session.user.user_metadata.full_name,
             phone: tel
         });
 
-        if (error) alert("Erro técnico: " + error.message);
-        else alert("Sucesso! O BoraAli agora está pronto para você.");
+        if (error) alert("Erro ao salvar: " + error.message);
+        else alert("Sucesso! Cadastro salvo no BoraAli.");
     }
 </script>
 
