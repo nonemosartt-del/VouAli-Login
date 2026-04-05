@@ -3,46 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BoraAli</title>
+    <title>BoraAli - Motorista</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f0f2f5; }
-        .card { background: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 300px; }
-        button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        input { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; }
+        body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f8fafc; }
+        .card { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 320px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ccc; box-sizing: border-box; }
         #form-section, #login-section { display: none; }
-        img { width: 80px; border-radius: 50%; margin-bottom: 10px; }
+        img { width: 80px; border-radius: 50%; margin-bottom: 10px; border: 3px solid #eee; }
     </style>
 </head>
 <body>
     <div class="card">
         <h2>BoraAli 🚗</h2>
-        <div id="status">Verificando...</div>
-        
+        <div id="status">Carregando sistema...</div>
         <div id="login-section">
             <button onclick="login()">Entrar com Google</button>
         </div>
-
         <div id="form-section">
             <img id="foto" src="">
-            <p>Olá, <span id="nome"></span></p>
-            <input type="text" id="tel" placeholder="WhatsApp">
-            <button onclick="salvar()">Salvar</button>
+            <p>Bem-vindo, <strong id="nome"></strong>!</p>
+            <input type="text" id="tel" placeholder="Seu WhatsApp">
+            <button onclick="salvar()">Confirmar e Salvar</button>
         </div>
     </div>
-
     <script>
-        const URL = 'https://ehemdcucqzfwvbomynr.supabase.co';
-        const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoZW1kY3VjcXpmd2V2Ym9teW5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjkxNzksImV4cCI6MjA5MDg0NTE3OX0.TCp09qdrquyCNfdbgpLpMNJWA0wSMTJZcJu5CAcZ5ro';
-        const supabaseClient = supabase.createClient(URL, KEY);
-
-        async function login() {
-            await supabaseClient.auth.signInWithOAuth({
-                provider: 'google',
-                options: { redirectTo: window.location.origin + window.location.pathname }
-            });
-        }
-
+        const SUPABASE_URL = 'https://ehemdcucqzfwvbomynr.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoZW1kY3VjcXpmd2V2Ym9teW5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjkxNzksImV4cCI6MjA5MDg0NTE3OX0.TCp09qdrquyCNfdbgpLpMNJWA0wSMTJZcJu5CAcZ5ro';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        async function login() { await supabaseClient.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + window.location.pathname } }); }
         supabaseClient.auth.onAuthStateChange((event, session) => {
             document.getElementById('status').style.display = 'none';
             if (session) {
@@ -50,20 +40,12 @@
                 document.getElementById('form-section').style.display = 'block';
                 document.getElementById('nome').innerText = session.user.user_metadata.full_name;
                 document.getElementById('foto').src = session.user.user_metadata.avatar_url;
-            } else {
-                document.getElementById('login-section').style.display = 'block';
-            }
+            } else { document.getElementById('login-section').style.display = 'block'; }
         });
-
         async function salvar() {
             const { data: { session } } = await supabaseClient.auth.getSession();
-            const { error } = await supabaseClient.from('profiles').upsert({
-                id: session.user.id,
-                full_name: session.user.user_metadata.full_name,
-                phone: document.getElementById('tel').value
-            });
-            if (error) alert("Erro: " + error.message);
-            else alert("Dados salvos com sucesso!");
+            const { error } = await supabaseClient.from('profiles').upsert({ id: session.user.id, full_name: session.user.user_metadata.full_name, phone: document.getElementById('tel').value });
+            if (error) alert("Erro: " + error.message); else alert("Cadastro realizado!");
         }
     </script>
 </body>
