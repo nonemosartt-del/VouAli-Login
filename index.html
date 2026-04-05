@@ -1,82 +1,37 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BoraAli - Motorista</title>
+    <title>BoraAli</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f1f5f9; }
-        .card { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h2 { color: #1e293b; margin-bottom: 20px; }
-        button { width: 100%; padding: 14px; background: #2563eb; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; }
-        input { width: 100%; padding: 12px; margin: 15px 0; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; }
-        #form-section, #login-section { display: none; }
-        #status { font-size: 14px; color: #64748b; margin-bottom: 10px; }
-        img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #e2e8f0; margin-bottom: 10px; }
-    </style>
 </head>
 <body>
-
-<div class="card">
-    <h2>BoraAli 🚗</h2>
-    <div id="status">Verificando sessão...</div>
-
-    <div id="login-section">
-        <p>Acesse com sua conta Google:</p>
-        <button onclick="login()">Entrar com Google</button>
+    <div style="text-align:center; margin-top:50px;">
+        <h2>BoraAli 🚗</h2>
+        <div id="login-section">
+            <button onclick="login()" style="padding:10px 20px;">Entrar com Google</button>
+        </div>
+        <div id="form-section" style="display:none;">
+            <p>Olá, <span id="nome"></span>!</p>
+            <input type="text" id="tel" placeholder="WhatsApp">
+            <button onclick="salvar()">Salvar</button>
+        </div>
     </div>
-
-    <div id="form-section">
-        <img id="user-photo" src="">
-        <p>Olá, <strong id="user-name"></strong>!</p>
-        <input type="text" id="phone" placeholder="Seu WhatsApp (Ex: 989...)">
-        <button onclick="salvarCadastro()">Finalizar Cadastro</button>
-    </div>
-</div>
-
-<script>
-    const SB_URL = 'https://ehemdcucqzfwvbomynr.supabase.co';
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoZW1kY3VjcXpmd2V2Ym9teW5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjkxNzksImV4cCI6MjA5MDg0NTE3OX0.TCp09qdrquyCNfdbgpLpMNJWA0wSMTJZcJu5CAcZ5ro';
-    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
-
-    async function login() {
-        // Redirecionamento automático configurado para a URL atual do projeto
-        await supabaseClient.auth.signInWithOAuth({
-            provider: 'google',
-            options: { redirectTo: window.location.origin + window.location.pathname }
+    <script>
+        const client = supabase.createClient('https://ehemdcucqzfwvbomynr.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoZW1kY3VjcXpmd2V2Ym9teW5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjkxNzksImV4cCI6MjA5MDg0NTE3OX0.TCp09qdrquyCNfdbgpLpMNJWA0wSMTJZcJu5CAcZ5ro');
+        async function login() { await client.auth.signInWithOAuth({ provider: 'google' }); }
+        client.auth.onAuthStateChange((_, session) => {
+            if (session) {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('form-section').style.display = 'block';
+                document.getElementById('nome').innerText = session.user.user_metadata.full_name;
+            }
         });
-    }
-
-    // Monitor de estado: decide qual tela mostrar assim que a página carrega
-    supabaseClient.auth.onAuthStateChange((event, session) => {
-        document.getElementById('status').style.display = 'none';
-        if (session) {
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('form-section').style.display = 'block';
-            document.getElementById('user-name').innerText = session.user.user_metadata.full_name;
-            document.getElementById('user-photo').src = session.user.user_metadata.avatar_url;
-        } else {
-            document.getElementById('login-section').style.display = 'block';
+        async function salvar() {
+            const { data: { user } } = await client.auth.getUser();
+            await client.from('profiles').upsert({ id: user.id, phone: document.getElementById('tel').value });
+            alert("Salvo!");
         }
-    });
-
-    async function salvarCadastro() {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        const tel = document.getElementById('phone').value;
-
-        if(!tel) return alert("Por favor, digite seu WhatsApp!");
-
-        const { error } = await supabaseClient.from('profiles').upsert({
-            id: session.user.id,
-            full_name: session.user.user_metadata.full_name,
-            phone: tel
-        });
-
-        if (error) alert("Erro ao salvar: " + error.message);
-        else alert("Sucesso! Cadastro salvo no BoraAli.");
-    }
-</script>
-
+    </script>
 </body>
 </html>
