@@ -7,31 +7,31 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f8fafc; }
-        .card { background: white; padding: 40px 30px; border-radius: 24px; text-align: center; width: 90%; max-width: 380px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-        h2 { color: #0f172a; margin-bottom: 24px; font-weight: 800; }
-        input, select, button { width: 100%; padding: 15px; margin: 12px 0; border-radius: 12px; border: 1px solid #e2e8f0; box-sizing: border-box; font-size: 16px; outline: none; }
-        button { background: #2563eb; color: white; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
-        button:hover { background: #1d4ed8; transform: translateY(-1px); }
+        .card { background: white; padding: 35px; border-radius: 24px; text-align: center; width: 90%; max-width: 380px; box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        h2 { color: #0f172a; margin-bottom: 20px; font-weight: 800; }
+        input, select, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 16px; box-sizing: border-box; }
+        button { background: #2563eb; color: white; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; }
+        button:hover { background: #1d4ed8; }
         #form-section, #login-section { display: none; }
-        #foto { width: 100px; height: 100px; border-radius: 50%; border: 4px solid #dbeafe; margin-bottom: 15px; object-fit: cover; }
-        .loading-text { color: #64748b; font-size: 14px; }
+        #foto { width: 90px; height: 90px; border-radius: 50%; border: 3px solid #dbeafe; margin-bottom: 10px; }
+        .status-msg { color: #64748b; font-size: 14px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h2>BoraAli 🚗</h2>
-    <div id="status" class="loading-text">Sincronizando...</div>
+    <div id="status" class="status-msg">Sincronizando sistema...</div>
 
     <div id="login-section">
-        <p style="color: #475569;">Para começar, acesse com seu Gmail:</p>
+        <p style="color: #475569;">Acesse com seu Gmail:</p>
         <button onclick="login()">Entrar com Google</button>
     </div>
 
     <div id="form-section">
         <img id="foto" src="" alt="Sua Foto">
         <p>Olá, <strong id="nome-display"></strong>!</p>
-        <input type="text" id="tel" placeholder="Seu WhatsApp (989...)">
+        <input type="text" id="tel" placeholder="WhatsApp (989...)">
         <select id="veiculo">
             <option value="Carro (Prisma)">Carro (Prisma)</option>
             <option value="Moto">Moto</option>
@@ -42,14 +42,13 @@
 </div>
 
 <script>
-    // 1. CONFIGURAÇÃO (SUA CHAVE JÁ INCLUÍDA)
-    const SUPABASE_URL = 'https://ehemdcucqzfwvbomynr.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoZW1kY3VjcXpmd2V2Ym9teW5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjkxNzksImV4cCI6MjA5MDg0NTE3OX0.TCp09qdrquyCNfdbgpLpMNJWA0wSMTJZcJu5CAcZ5ro';
-    
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // CONFIGURAÇÃO (URL E CHAVE DO MOSART)
+    const url = 'https://ehemdcucqzfwvbomynr.supabase.co';
+    const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoZW1kY3VjcXpmd2V2Ym9teW5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjkxNzksImV4cCI6MjA5MDg0NTE3OX0.TCp09qdrquyCNfdbgpLpMNJWA0wSMTJZcJu5CAcZ5ro';
+    const supabaseClient = supabase.createClient(url, key);
 
-    // 2. FUNÇÃO QUE TROCA AS TELAS NA MARRA
-    function exibirApp(user) {
+    // FUNÇÃO PARA TROCAR A TELA
+    function abrirFormulario(user) {
         document.getElementById('status').style.display = 'none';
         document.getElementById('login-section').style.display = 'none';
         document.getElementById('form-section').style.display = 'block';
@@ -57,18 +56,7 @@
         document.getElementById('foto').src = user.user_metadata.avatar_url;
     }
 
-    // 3. COMANDO DE EMERGÊNCIA AO CARREGAR A PÁGINA
-    window.onload = async () => {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session) {
-            exibirApp(session.user);
-        } else {
-            document.getElementById('status').style.display = 'none';
-            document.getElementById('login-section').style.display = 'block';
-        }
-    };
-
-    // 4. FUNÇÃO DE LOGIN
+    // LOGIN COM GOOGLE
     async function login() {
         await supabaseClient.auth.signInWithOAuth({ 
             provider: 'google', 
@@ -76,16 +64,23 @@
         });
     }
 
-    // 5. FUNÇÃO DE SALVAR NO BANCO
+    // VIGIA DE SESSÃO (MUDA TELA AO LOGAR)
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (session) {
+            abrirFormulario(session.user);
+        } else {
+            document.getElementById('status').style.display = 'none';
+            document.getElementById('login-section').style.display = 'block';
+        }
+    });
+
+    // SALVAR NA TABELA PROFILES
     async function salvar() {
         const { data: { session } } = await supabaseClient.auth.getSession();
         const telefone = document.getElementById('tel').value;
         const carro = document.getElementById('veiculo').value;
 
-        if (!telefone) {
-            alert("Por favor, preencha seu WhatsApp.");
-            return;
-        }
+        if (!telefone) { alert("Preencha o WhatsApp!"); return; }
 
         const { error } = await supabaseClient.from('profiles').upsert({
             id: session.user.id,
@@ -94,11 +89,8 @@
             car_model: carro
         });
 
-        if (error) {
-            alert("Erro ao salvar: " + error.message);
-        } else {
-            alert("Sucesso! Cadastro confirmado no BoraAli.");
-        }
+        if (error) alert("Erro ao salvar: " + error.message);
+        else alert("Sucesso! Cadastro salvo no BoraAli.");
     }
 </script>
 
