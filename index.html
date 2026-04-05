@@ -3,96 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BoraAli - Motorista</title>
+    <title>BoraAli</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f8fafc; }
-        .card { background: white; padding: 35px; border-radius: 24px; text-align: center; width: 90%; max-width: 380px; box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
-        h2 { color: #0f172a; margin-bottom: 20px; font-weight: 800; }
-        input, select, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 16px; box-sizing: border-box; }
-        button { background: #2563eb; color: white; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; }
-        button:hover { background: #1d4ed8; }
+        body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f0f2f5; }
+        .card { background: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 300px; }
+        button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        input { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; }
         #form-section, #login-section { display: none; }
-        #foto { width: 90px; height: 90px; border-radius: 50%; border: 3px solid #dbeafe; margin-bottom: 10px; }
-        .status-msg { color: #64748b; font-size: 14px; margin-bottom: 15px; }
+        img { width: 80px; border-radius: 50%; margin-bottom: 10px; }
     </style>
 </head>
 <body>
+    <div class="card">
+        <h2>BoraAli 🚗</h2>
+        <div id="status">Verificando...</div>
+        
+        <div id="login-section">
+            <button onclick="login()">Entrar com Google</button>
+        </div>
 
-<div class="card">
-    <h2>BoraAli 🚗</h2>
-    <div id="status" class="status-msg">Sincronizando sistema...</div>
-
-    <div id="login-section">
-        <p style="color: #475569;">Acesse com seu Gmail:</p>
-        <button onclick="login()">Entrar com Google</button>
+        <div id="form-section">
+            <img id="foto" src="">
+            <p>Olá, <span id="nome"></span></p>
+            <input type="text" id="tel" placeholder="WhatsApp">
+            <button onclick="salvar()">Salvar</button>
+        </div>
     </div>
 
-    <div id="form-section">
-        <img id="foto" src="" alt="Sua Foto">
-        <p>Olá, <strong id="nome-display"></strong>!</p>
-        <input type="text" id="tel" placeholder="WhatsApp (989...)">
-        <select id="veiculo">
-            <option value="Carro (Prisma)">Carro (Prisma)</option>
-            <option value="Moto">Moto</option>
-            <option value="Outro">Outro Veículo</option>
-        </select>
-        <button onclick="salvar()">Confirmar Cadastro</button>
-    </div>
-</div>
+    <script>
+        const URL = 'https://ehemdcucqzfwvbomynr.supabase.co';
+        const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoZW1kY3VjcXpmd2V2Ym9teW5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjkxNzksImV4cCI6MjA5MDg0NTE3OX0.TCp09qdrquyCNfdbgpLpMNJWA0wSMTJZcJu5CAcZ5ro';
+        const supabaseClient = supabase.createClient(URL, KEY);
 
-<script>
-    // CONFIGURAÇÃO (URL E CHAVE DO MOSART)
-    const url = 'https://ehemdcucqzfwvbomynr.supabase.co';
-    const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoZW1kY3VjcXpmd2V2Ym9teW5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjkxNzksImV4cCI6MjA5MDg0NTE3OX0.TCp09qdrquyCNfdbgpLpMNJWA0wSMTJZcJu5CAcZ5ro';
-    const supabaseClient = supabase.createClient(url, key);
-
-    // FUNÇÃO PARA TROCAR A TELA
-    function abrirFormulario(user) {
-        document.getElementById('status').style.display = 'none';
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('form-section').style.display = 'block';
-        document.getElementById('nome-display').innerText = user.user_metadata.full_name;
-        document.getElementById('foto').src = user.user_metadata.avatar_url;
-    }
-
-    // LOGIN COM GOOGLE
-    async function login() {
-        await supabaseClient.auth.signInWithOAuth({ 
-            provider: 'google', 
-            options: { redirectTo: window.location.origin + window.location.pathname } 
-        });
-    }
-
-    // VIGIA DE SESSÃO (MUDA TELA AO LOGAR)
-    supabaseClient.auth.onAuthStateChange((event, session) => {
-        if (session) {
-            abrirFormulario(session.user);
-        } else {
-            document.getElementById('status').style.display = 'none';
-            document.getElementById('login-section').style.display = 'block';
+        async function login() {
+            await supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: window.location.origin + window.location.pathname }
+            });
         }
-    });
 
-    // SALVAR NA TABELA PROFILES
-    async function salvar() {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        const telefone = document.getElementById('tel').value;
-        const carro = document.getElementById('veiculo').value;
-
-        if (!telefone) { alert("Preencha o WhatsApp!"); return; }
-
-        const { error } = await supabaseClient.from('profiles').upsert({
-            id: session.user.id,
-            full_name: session.user.user_metadata.full_name,
-            phone: telefone,
-            car_model: carro
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            document.getElementById('status').style.display = 'none';
+            if (session) {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('form-section').style.display = 'block';
+                document.getElementById('nome').innerText = session.user.user_metadata.full_name;
+                document.getElementById('foto').src = session.user.user_metadata.avatar_url;
+            } else {
+                document.getElementById('login-section').style.display = 'block';
+            }
         });
 
-        if (error) alert("Erro ao salvar: " + error.message);
-        else alert("Sucesso! Cadastro salvo no BoraAli.");
-    }
-</script>
-
+        async function salvar() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            const { error } = await supabaseClient.from('profiles').upsert({
+                id: session.user.id,
+                full_name: session.user.user_metadata.full_name,
+                phone: document.getElementById('tel').value
+            });
+            if (error) alert("Erro: " + error.message);
+            else alert("Dados salvos com sucesso!");
+        }
+    </script>
 </body>
 </html>
